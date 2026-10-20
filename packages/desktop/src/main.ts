@@ -56,7 +56,6 @@ import {
 import { createExternalUrlOpener } from "./features/opener.js";
 import { createBrowserCaptureService } from "./features/browser-capture.js";
 import { registerEditorTargetHandlers } from "./features/editor-targets/ipc.js";
-import { resolveAppIconPath } from "./features/stamped-icon.js";
 import { setupApplicationMenu } from "./features/menu.js";
 import {
   BROWSER_NEW_TAB_REQUEST_EVENT,
@@ -115,7 +114,7 @@ const DEV_SERVER_URL = process.env.EXPO_DEV_URL ?? "http://localhost:8081";
 const APP_SCHEME = "paseo";
 const PASEO_DEBUG = process.env.PASEO_DEBUG === "1";
 const DISABLE_SINGLE_INSTANCE_LOCK = process.env.PASEO_DISABLE_SINGLE_INSTANCE_LOCK === "1";
-const APP_NAME = process.env.PASEO_TEST_APP_NAME?.trim() || "Paseo";
+const APP_NAME = process.env.PASEO_TEST_APP_NAME?.trim() || "Paseo NIO";
 const DESKTOP_WINDOW_CHROME_MODE = resolveDesktopWindowChromeMode({
   platform: process.platform,
   override: process.env.PASEO_DESKTOP_WINDOW_CONTROLS,
@@ -612,32 +611,10 @@ function getWindowIconPath(): string | null {
   return candidates.find((candidate) => existsSync(candidate)) ?? null;
 }
 
-function getDevBuildLabel(): string | null {
-  if (app.isPackaged) {
-    return null;
-  }
-  return process.env.EXPO_PUBLIC_PASEO_DEV_BUILD_LABEL?.trim() || null;
-}
-
-let cachedEffectiveIconPath: string | null = null;
-
 async function getEffectiveAppIconPath(): Promise<string | null> {
-  if (cachedEffectiveIconPath !== null) {
-    return cachedEffectiveIconPath;
-  }
-  const baseIconPath = getWindowIconPath();
-  if (app.isPackaged || !baseIconPath) {
-    cachedEffectiveIconPath = baseIconPath;
-    return baseIconPath;
-  }
-  const devLabel = getDevBuildLabel();
-  cachedEffectiveIconPath = await resolveAppIconPath({
-    isPackaged: false,
-    baseIconPath,
-    devLabel,
-    cacheDir: app.getPath("userData"),
-  });
-  return cachedEffectiveIconPath;
+  // The NIO mark uses the same optical size in development and packaged builds.
+  // A branch-name stamp would cover the lower half of its silhouette.
+  return getWindowIconPath();
 }
 
 async function applyAppIcon(): Promise<void> {
